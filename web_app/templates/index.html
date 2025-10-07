@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🇱🇰 SL Microfinance Loan Approval System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-section, .results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .form-section h2, .results-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .btn-predict {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-predict:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .recommendation-box {
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .recommendation-box.approve {
+            background: #d4edda;
+            border: 3px solid #28a745;
+        }
+
+        .recommendation-box.reject {
+            background: #f8d7da;
+            border: 3px solid #dc3545;
+        }
+
+        .recommendation-box h3 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-box.approve h3 {
+            color: #28a745;
+        }
+
+        .recommendation-box.reject h3 {
+            color: #dc3545;
+        }
+
+        .risk-meter {
+            margin: 20px 0;
+        }
+
+        .risk-bar {
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .risk-fill {
+            height: 100%;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .model-predictions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .model-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .model-card h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .model-card .prob {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .model-card .status {
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        .model-card .status.approve {
+            color: #28a745;
+        }
+
+        .model-card .status.reject {
+            color: #dc3545;
+        }
+
+        .risk-factors {
+            margin-top: 20px;
+        }
+
+        .factor-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .factor-list li {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .factor-list.positive li {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .factor-list.negative li {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🇱🇰 Sri Lanka Microfinance Loan Approval System</h1>
+            <p>AI-Powered Risk Assessment using 4 Deep Learning Models</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Application Form -->
+            <div class="form-section">
+                <h2>📋 Loan Application Form</h2>
+                <form id="loanForm">
+                    <h3 style="color: #667eea; margin: 20px 0 15px;">Personal Information</h3>
+                    
+                    <div class="form-group">
+                        <label>Age:</label>
+                        <input type="number" name="age" min="18" max="65" value="35" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Gender:</label>
+                        <select name="gender" required>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Marital Status:</label>
+                        <select name="marital_status" required>
+                            <option value="Single">Single</option>
+                            <option value="Married" selected>Married</option>
+                            <option value="Widowed">Widowed</option>
+                            <option value="Divorced">Divorced</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Education Level:</label>
+                        <select name="education_level" required>
+                            <option value="Grade 5-8">Grade 5-8</option>
+                            <option value="Grade 9-10">Grade 9-10</option>
+                            <option value="O/L Passed" selected>O/L Passed</option>
+                            <option value="A/L Passed">A/L Passed</option>
+                            <option value="Diploma">Diploma</option>
+                            <option value="Degree">Degree</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Family Size:</label>
+                        <input type="number" name="family_size" min="1" max="10" value="4" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Number of Dependents:</label>
+                        <input type="number" name="dependents" min="0" max="10" value="2" required>
+                    </div>
+
+                    <h3 style="color: #667eea; margin: 20px 0 15px;">Employment & Income</h3>
+
+                    <div class="form-group">
+                        <label>Employment Type:</label>
+                        <select name="employment_type" required>
+                            <option value="Permanent">Permanent</option>
+                            <option value="Casual">Casual</option>
+                            <option value="Self-Employed" selected>Self-Employed</option>
+                            <option value="Farmer">Farmer</option>
+                            <option value="Daily Wage">Daily Wage</option>
+                            <option value="Pensioner">Pensioner</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Monthly Income (Rs.):</label>
+                        <input type="number" name="monthly_income" min="10000" value="45000" required>
+                    </div>
+
+                    <h3 style="color: #667eea; margin: 20px 0 15px;">Location & Assets</h3>
+
+                    <div class="form-group">
+                        <label>District:</label>
+                        <select name="district" required>
+                            <option value="Colombo" selected>Colombo</option>
+                            <option value="Gampaha">Gampaha</option>
+                            <option value="Kalutara">Kalutara</option>
+                            <option value="Kandy">Kandy</option>
+                            <option value="Matale">Matale</option>
+                            <option value="Nuwara Eliya">Nuwara Eliya</option>
+                            <option value="Galle">Galle</option>
+                            <option value="Matara">Matara</option>
+                            <option value="Hambantota">Hambantota</option>
+                            <option value="Jaffna">Jaffna</option>
+                            <option value="Anuradhapura">Anuradhapura</option>
+                            <option value="Polonnaruwa">Polonnaruwa</option>
+                            <option value="Badulla">Badulla</option>
+                            <option value="Ratnapura">Ratnapura</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Urban/Rural:</label>
+                        <select name="urban_rural" required>
+                            <option value="Urban" selected>Urban</option>
+                            <option value="Rural">Rural</option>
+                            <option value="Estate">Estate</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Land Ownership (acres):</label>
+                        <input type="number" name="land_ownership_acres" min="0" step="0.25" value="0.5" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>House Ownership:</label>
+                        <select name="house_ownership" required>
+                            <option value="Own" selected>Own</option>
+                            <option value="Rent">Rent</option>
+                            <option value="Family">Family</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Vehicle Ownership:</label>
+                        <select name="vehicle_ownership" required>
+                            <option value="None">None</option>
+                            <option value="Bicycle">Bicycle</option>
+                            <option value="Motorcycle" selected>Motorcycle</option>
+                            <option value="Three-wheeler">Three-wheeler</option>
+                            <option value="Car">Car</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Livestock Count:</label>
+                        <input type="number" name="livestock_count" min="0" value="0" required>
+                    </div>
+
+                    <h3 style="color: #667eea; margin: 20px 0 15px;">Financial History</h3>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" name="bank_account" id="bank_account" checked>
+                        <label for="bank_account" style="margin: 0;">Has Bank Account</label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" name="mobile_banking_user" id="mobile_banking" checked>
+                        <label for="mobile_banking" style="margin: 0;">Uses Mobile Banking</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mobile Payment Score (300-850):</label>
+                        <input type="number" name="mobile_payment_score" min="300" max="850" value="680" required>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" name="existing_loans" id="existing_loans">
+                        <label for="existing_loans" style="margin: 0;">Has Existing Loans</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Existing Debt Amount (Rs.):</label>
+                        <input type="number" name="existing_debt_amount" min="0" value="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Electricity Payment History (months):</label>
+                        <input type="number" name="electricity_payment_history" min="0" max="36" value="24" required>
+                    </div>
+
+                    <h3 style="color: #667eea; margin: 20px 0 15px;">Community Factors</h3>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" name="village_savings_member" id="village_savings" checked>
+                        <label for="village_savings" style="margin: 0;">Village Savings Member</label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" name="guarantor_available" id="guarantor" checked>
+                        <label for="guarantor" style="margin: 0;">Guarantor Available</label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" name="gn_recommendation" id="gn_recommendation" checked>
+                        <label for="gn_recommendation" style="margin: 0;">GN Recommendation</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Previous MFI Loans:</label>
+                        <input type="number" name="previous_mfi_loans" min="0" max="5" value="1" required>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" name="previous_default" id="previous_default">
+                        <label for="previous_default" style="margin: 0;">Previous Default</label>
+                    </div>
+
+                    <h3 style="color: #667eea; margin: 20px 0 15px;">Loan Details</h3>
+
+                    <div class="form-group">
+                        <label>Loan Amount Requested (Rs.):</label>
+                        <input type="number" name="loan_amount_requested" min="25000" step="5000" value="100000" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Loan Purpose:</label>
+                        <select name="loan_purpose" required>
+                            <option value="Business" selected>Business</option>
+                            <option value="Agriculture">Agriculture</option>
+                            <option value="Education">Education</option>
+                            <option value="Medical">Medical</option>
+                            <option value="Housing">Housing</option>
+                            <option value="Vehicle">Vehicle</option>
+                            <option value="Wedding">Wedding</option>
+                            <option value="Emergency">Emergency</option>
+                            <option value="Debt Consolidation">Debt Consolidation</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Loan Term (months):</label>
+                        <select name="loan_term_months" required>
+                            <option value="6">6 months</option>
+                            <option value="12">12 months</option>
+                            <option value="18">18 months</option>
+                            <option value="24" selected>24 months</option>
+                            <option value="36">36 months</option>
+                            <option value="48">48 months</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-predict" id="predictBtn">
+                        🔮 Predict Loan Approval
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+                <h2>📊 Prediction Results</h2>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing application with AI models...</p>
+                </div>
+
+                <div id="results" style="display: none;">
+                    <div class="recommendation-box" id="recommendationBox">
+                        <h3 id="recommendationText"></h3>
+                        <p id="recommendationDetail"></p>
+                    </div>
+
+                    <div class="risk-meter">
+                        <h4>Default Risk Probability</h4>
+                        <div class="risk-bar">
+                            <div class="risk-fill" id="riskFill">
+                                <span id="riskPercent"></span>
+                            </div>
+                        </div>
+                        <p style="text-align: center; margin-top: 10px;">
+                            Risk Level: <strong id="riskLevel"></strong>
+                        </p>
+                    </div>
+
+                    <h3>🤖 Model Predictions</h3>
+                    <div class="model-predictions" id="modelPredictions">
+                        <!-- Model cards will be inserted here -->
+                    </div>
+
+                    <div class="risk-factors">
+                        <h3>📈 Risk Factor Analysis</h3>
+                        
+                        <div id="positiveFactors" style="margin: 15px 0;">
+                            <h4 style="color: #28a745;">✅ Positive Factors</h4>
+                            <ul class="factor-list positive" id="positiveList"></ul>
+                        </div>
+
+                        <div id="negativeFactors" style="margin: 15px 0;">
+                            <h4 style="color: #dc3545;">⚠️ Risk Factors</h4>
+                            <ul class="factor-list negative" id="negativeList"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loanForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading
+            document.getElementById('resultsSection').classList.add('show');
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('results').style.display = 'none';
+            
+            // Disable button
+            document.getElementById('predictBtn').disabled = true;
+            
+            // Collect form data
+            const formData = new FormData(this);
+            const data = {};
+            
+            // Convert form data to object
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            // Handle checkboxes
+            data['bank_account'] = document.getElementById('bank_account').checked ? 1 : 0;
+            data['mobile_banking_user'] = document.getElementById('mobile_banking').checked ? 1 : 0;
+            data['existing_loans'] = document.getElementById('existing_loans').checked ? 1 : 0;
+            data['village_savings_member'] = document.getElementById('village_savings').checked ? 1 : 0;
+            data['guarantor_available'] = document.getElementById('guarantor').checked ? 1 : 0;
+            data['gn_recommendation'] = document.getElementById('gn_recommendation').checked ? 1 : 0;
+            data['previous_default'] = document.getElementById('previous_default').checked ? 1 : 0;
+            
+            try {
+                // Send to backend
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayResults(result);
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error connecting to server: ' + error);
+            } finally {
+                // Hide loading
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('predictBtn').disabled = false;
+            }
+        });
+
+        function displayResults(result) {
+            const ensemble = result.ensemble;
+            const predictions = result.predictions;
+            const riskFactors = result.risk_factors;
+            
+            // Recommendation box
+            const recBox = document.getElementById('recommendationBox');
+            const recText = document.getElementById('recommendationText');
+            const recDetail = document.getElementById('recommendationDetail');
+            
+            if (ensemble.recommendation === 'APPROVE') {
+                recBox.className = 'recommendation-box approve';
+                recText.textContent = '✅ LOAN APPROVED';
+            } else {
+                recBox.className = 'recommendation-box reject';
+                recText.textContent = '❌ LOAN REJECTED';
+            }
+            recDetail.textContent = ensemble.recommendation_detail;
+            
+            // Risk meter
+            const riskFill = document.getElementById('riskFill');
+            const riskPercent = document.getElementById('riskPercent');
+            const riskLevel = document.getElementById('riskLevel');
+            
+            const probability = (ensemble.probability * 100).toFixed(1);
+            riskFill.style.width = probability + '%';
+            riskFill.style.background = ensemble.risk_color;
+            riskPercent.textContent = probability + '%';
+            riskLevel.textContent = ensemble.risk_level;
+            riskLevel.style.color = ensemble.risk_color;
+            
+            // Model predictions
+            const modelPredictions = document.getElementById('modelPredictions');
+            modelPredictions.innerHTML = '';
+            
+            for (const [modelName, pred] of Object.entries(predictions)) {
+                const card = document.createElement('div');
+                card.className = 'model-card';
+                
+                const statusClass = pred.prediction === 0 ? 'approve' : 'reject';
+                const statusText = pred.prediction === 0 ? '✅ Approve' : '❌ Reject';
+                
+                card.innerHTML = `
+                    <h4>${modelName}</h4>
+                    <div class="prob">${(pred.probability * 100).toFixed(1)}%</div>
+                    <div class="status ${statusClass}">${statusText}</div>
+                `;
+                
+                modelPredictions.appendChild(card);
+            }
+            
+            // Risk factors
+            const positiveList = document.getElementById('positiveList');
+            const negativeList = document.getElementById('negativeList');
+            
+            positiveList.innerHTML = '';
+            negativeList.innerHTML = '';
+            
+            if (riskFactors.positive.length > 0) {
+                riskFactors.positive.forEach(factor => {
+                    const li = document.createElement('li');
+                    li.textContent = '✓ ' + factor;
+                    positiveList.appendChild(li);
+                });
+            } else {
+                positiveList.innerHTML = '<li>None identified</li>';
+            }
+            
+            if (riskFactors.negative.length > 0) {
+                riskFactors.negative.forEach(factor => {
+                    const li = document.createElement('li');
+                    li.textContent = '⚠ ' + factor;
+                    negativeList.appendChild(li);
+                });
+            } else {
+                negativeList.innerHTML = '<li>None identified</li>';
+            }
+        }
+    </script>
+</body>
+</html>
